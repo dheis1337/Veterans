@@ -1,0 +1,101 @@
+library(openxlsx)
+library(data.table)
+library(ggplot2)
+library(RODBC)
+library(RMySQL)
+
+setwd("c:/David")
+
+# Get the names of each sheet of the Excel file
+sheet.names <- getSheetNames("MasterList01_30_17.xlsx")
+
+# Create a function that can be lapply'd over the sheet.names 
+sheet.function <- function(x, sheet.names) {  
+  as.data.table(read.xlsx(xlsxFile = x, sheet = sheet.names))
+}
+
+# lapply above function to sheet.names object. End result is a list 
+# of all sheets in the MasterList workbook
+all.data <- lapply(sheet.names, sheet.function, x = "MasterList01_30_17.xlsx")
+
+# Name each list element with the appropriate sheet name from the workbook
+names(all.data) <- sheet.names
+
+# Get all the column names from the first sheet. The column names are abbreviated, 
+# so I want to change them to their extended forms for better understandability
+col.abbr <- colnames(all.data$`Summer 2014`)
+
+# Write this to an Excel file that will be sent to the person who can give me 
+# extended versions
+write.csv(col.abbr, file = "ColumnNames")
+
+# Now I need to convert the columns to the appropriate type. To do this, I want 
+# to make my list one large data table. In order for this to work, I need to add 
+# a column which will be Current Term. The Current Term is the name of each list 
+# element. By doing this, I won't lose the term information, and I can change the 
+# variable types faster. To do this, 
+for (i in 1:length(all.data)) {
+  length.x <- nrow(all.data[[i]])
+  term <- rep(sheet.names[i], times = length.x)
+  all.data[[i]] <- cbind(all.data[[i]], term)
+}
+all.data[[10]]
+
+# The Excel file has two types of sheets. One is an individual term, such as Summer 2014, 
+# and the second is an aggregated sheet for each academic year, such as 2014-2015. 
+# I want to separate these out because I don't want to include the aggregated sheets
+# in my large data table, because I'd be repeating all the information. 
+term.data <- all.data[-c(4, 8, 12)]
+agg.data <- all.data[c(4, 8, 12)]
+
+# Now that these are split, I can rbind each of the list elements into one data table
+term.dt <- do.call("rbind", term.data)
+
+# Now I have all of my term data in one data table, I can begin to start converting
+# the data types where needed. I'm going to convert all necessary variables to factors
+# first. 
+term.dt[, "INSTITUTION.CD" := as.factor(INSTITUTION.CD)]
+class(term.dt$INSTITUTION.CD) # to ensure conversion worked 
+
+term.dt[, "ETHNIC.GRP.CD" := as.factor(ETHNIC.GRP.CD)]
+class(term.dt$ETHNIC.GRP.CD)
+
+term.dt[, "MAR.STAT.LD" := as.factor(MAR.STAT.LD)]
+class(term.dt$ETHNIC.GRP.CD)
+
+term.dt[, "GENDER.CD" := as.factor(GENDER.CD)]
+class(term.dt$ETHNIC.GRP.CD)
+
+term.dt[, "ACAD.LVL.LD" := as.factor(ACAD.LVL.LD)]
+class(term.dt$ETHNIC.GRP.CD)
+
+term.dt[, "CAMPUS.CD" := as.factor(CAMPUS.CD)]
+class(term.dt$ETHNIC.GRP.CD)
+
+term.dt[, "ACAD.CAREER" := as.factor(ACAD.CAREER)]
+class(term.dt$ETHNIC.GRP.CD)
+
+term.dt[, "MAJOR1.LD" := as.factor(MAJOR1.LD)]
+class(term.dt$ETHNIC.GRP.CD)
+
+term.dt[, "DEG.LD" := as.factor(DEG.LD)]
+class(term.dt$ETHNIC.GRP.CD)
+
+term.dt[, "ACAD.PLAN.CD" := as.factor(ACAD.PLAN.CD)]
+class(term.dt$ETHNIC.GRP.CD)
+
+term.dt[, "ACAD.PLAN.LD" := as.factor(ACAD.PLAN.LD)]
+class(term.dt$ETHNIC.GRP.CD)
+
+term.dt[, "CU.MILITARY.STS.CD" := as.factor(CU.MILITARY.STS.CD)]
+class(term.dt$ETHNIC.GRP.CD)
+
+term.dt[, "CU.MILITARY.STS.LD" := as.factor(ETHNIC.GRP.CD)]
+class(term.dt$ETHNIC.GRP.CD)
+
+term.dt[, "CU.MILITARY.BRANCH" := as.factor(CU.MILITARY.BRANCH)]
+class(term.dt$ETHNIC.GRP.CD)
+
+
+
+
