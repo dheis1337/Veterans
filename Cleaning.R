@@ -101,6 +101,17 @@ class(term.dt$ETHNIC.GRP.CD)
 
 term.dt[, "term" := as.factor(term)]
 
-# These are all the variables that should be factors. Now, let's move to the 
-# variables that should be numeric. 
+# Now comes the more tedious cleaning, which I won't do in any particular order
+# First, the PR.ADMIT.TERM column. It is currently encoded to represent the various
+# years, and the enrollment terms possible. Each code has form 21XY, where the 
+# 21 refers to years 2000, the X refers to the specific year, and the Y is the term. 
+# The terms have encoding: 7 = fall, 1 = spring, 4 = summer. For example, the code
+# 2157 refers to the year 2015, and the fall term. 
+codes <- unique(term.dt$PR.ADMIT.TERM)
+decode <- c("Summer 2014", "Fall 2011", "Summer 2013", "Summer 2011", "Summer 2012", "Fall 2012", 
+            "Spring 2014", "Fall 2014", "Spring 2012", "Fall 2013", "Spring 2013", "Spring 2015", 
+            "Summer 2015", "Fall 2015", "Spring 2016", "Summer 2016", "Fall 2016", "Spring 2017")
 
+
+decode
+codes
