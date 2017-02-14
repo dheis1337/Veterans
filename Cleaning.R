@@ -51,6 +51,11 @@ agg.data <- all.data[c(4, 8, 12)]
 # Now that these are split, I can rbind each of the list elements into one data table
 term.dt <- do.call("rbind", term.data)
 
+# Before I start convert data types, I'm going to get rid of some of the columns
+# I don't need. 
+term.dt[, c("CU.VA.CLM.NUM", "CU.SMR.BNFT.AMT", "CU.ACD.YR.BNFT.AMT", "CU.SMR.EDBL.AMT",
+            "CU.CRTFCTN.TERM", "ACAD.PLAN.CD") := NULL]
+
 # Now I have all of my term data in one data table, I can begin to start converting
 # the data types where needed. I'm going to convert all necessary variables to factors
 # first. 
@@ -81,8 +86,6 @@ class(term.dt$ETHNIC.GRP.CD)
 term.dt[, "DEG.LD" := as.factor(DEG.LD)]
 class(term.dt$ETHNIC.GRP.CD)
 
-term.dt[, "ACAD.PLAN.CD" := as.factor(ACAD.PLAN.CD)]
-class(term.dt$ETHNIC.GRP.CD)
 
 term.dt[, "ACAD.PLAN.LD" := as.factor(ACAD.PLAN.LD)]
 class(term.dt$ETHNIC.GRP.CD)
@@ -96,6 +99,8 @@ class(term.dt$ETHNIC.GRP.CD)
 term.dt[, "CU.MILITARY.BRANCH" := as.factor(CU.MILITARY.BRANCH)]
 class(term.dt$ETHNIC.GRP.CD)
 
+term.dt[, "term" := as.factor(term)]
 
-
+# These are all the variables that should be factors. Now, let's move to the 
+# variables that should be numeric. 
 
