@@ -6,7 +6,8 @@ library(RMySQL)
 
 setwd("c:/David")
 
-setwd("C:/mystuff/datascience/projects/veterans")
+# setwd("C:/mystuff/datascience/projects/veterans")
+
 # Get the names of each sheet of the Excel file
 sheet.names <- getSheetNames("MasterList01_30_17.xlsx")
 
@@ -114,22 +115,9 @@ decode <- c("Summer 2014", "Fall 2011", "Summer 2013", "Summer 2011", "Summer 20
             "Summer 2015", "Fall 2015", "Spring 2016", "Summer 2016", "Fall 2016", "Spring 2017")
 
 
-# To compare the numeric codes in the PR.ADMIT.TERM to their decoded value, I'm 
-# going to create a list. 
-decode.list <- vector("list", length = length(decode))
-for (i in 1:length(decode.list)) {
-  decode.list[[i]][1] <- codes[i]
-  decode.list[[i]][2] <- decode[i]
+for (i in 1:length(decode)) {
+  loc <- grep(codes[i], test[, PR.ADMIT.TERM])
+  set(test, i = loc, j = "PR.ADMIT.TERM", value = decode[i])
 }
-
-
-
-for (i in 1:length(decode.list)) {
-  loc <- grep(decode.list[[i]][1], term.dt[, PR.ADMIT.TERM])
-  set(term.dt, i = loc, j = "PR.ADMIT.TERM", value = decode.list[[i]][2])
-}
-
-
-
 
 
