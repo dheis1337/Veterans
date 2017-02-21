@@ -120,4 +120,23 @@ for (i in 1:length(decode)) {
   set(test, i = loc, j = "PR.ADMIT.TERM", value = decode[i])
 }
 
+# Now let's change the GENDER.CD to their exapnded form. 
+# Males
+loc <- grep("M", term.dt[, GENDER.CD])
+set(term.dt, i = loc, j = "GENDER.CD", "Male")
 
+# Females
+loc <- grep("Feale", term.dt[, GENDER.CD])
+set(term.dt, i = loc, j = "GENDER.CD", "Female")
+
+# Unknown
+loc <- grep("U", term.dt[, GENDER.CD])
+set(term.dt, i = loc, j = "GENDER.CD", "Unknown")
+
+# Reset as factor so levels are appropriate
+term.dt[, GENDER.CD := factor(GENDER.CD)]
+
+# Now let's change the BIRTH.DATE column to an actual date
+term.dt[, BIRTH.DATE := as.Date(BIRTH.DATE, origin = "1899-12-30")]
+
+# 
