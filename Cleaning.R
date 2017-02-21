@@ -6,6 +6,7 @@ library(RMySQL)
 
 setwd("c:/David")
 
+setwd("C:/mystuff/datascience/projects/veterans")
 # Get the names of each sheet of the Excel file
 sheet.names <- getSheetNames("MasterList01_30_17.xlsx")
 
@@ -104,7 +105,7 @@ term.dt[, "term" := as.factor(term)]
 # Now comes the more tedious cleaning, which I won't do in any particular order
 # First, the PR.ADMIT.TERM column. It is currently encoded to represent the various
 # years, and the enrollment terms possible. Each code has form 21XY, where the 
-# 21 refers to years 2000, the X refers to the specific year, and the Y is the term. 
+# 21 refers to years 2000+, the X refers to the specific year, and the Y is the term. 
 # The terms have encoding: 7 = fall, 1 = spring, 4 = summer. For example, the code
 # 2157 refers to the year 2015, and the fall term. 
 codes <- unique(term.dt$PR.ADMIT.TERM)
@@ -113,5 +114,22 @@ decode <- c("Summer 2014", "Fall 2011", "Summer 2013", "Summer 2011", "Summer 20
             "Summer 2015", "Fall 2015", "Spring 2016", "Summer 2016", "Fall 2016", "Spring 2017")
 
 
-decode
-codes
+# To compare the numeric codes in the PR.ADMIT.TERM to their decoded value, I'm 
+# going to create a list. 
+decode.list <- vector("list", length = length(decode))
+for (i in 1:length(decode.list)) {
+  decode.list[[i]][1] <- codes[i]
+  decode.list[[i]][2] <- decode[i]
+}
+
+
+
+for (i in 1:length(decode.list)) {
+  loc <- grep(decode.list[[i]][1], term.dt[, PR.ADMIT.TERM])
+  set(term.dt, i = loc, j = "PR.ADMIT.TERM", value = decode.list[[i]][2])
+}
+
+
+
+
+
