@@ -116,8 +116,8 @@ decode <- c("Summer 2014", "Fall 2011", "Summer 2013", "Summer 2011", "Summer 20
 
 
 for (i in 1:length(decode)) {
-  loc <- grep(codes[i], test[, PR.ADMIT.TERM])
-  set(test, i = loc, j = "PR.ADMIT.TERM", value = decode[i])
+  loc <- grep(codes[i], term.dt[, PR.ADMIT.TERM])
+  set(term.dt, i = loc, j = "PR.ADMIT.TERM", value = decode[i])
 }
 
 # Now let's change the GENDER.CD to their exapnded form. 
@@ -126,7 +126,7 @@ loc <- grep("M", term.dt[, GENDER.CD])
 set(term.dt, i = loc, j = "GENDER.CD", "Male")
 
 # Females
-loc <- grep("Feale", term.dt[, GENDER.CD])
+loc <- grep("F", term.dt[, GENDER.CD])
 set(term.dt, i = loc, j = "GENDER.CD", "Female")
 
 # Unknown
@@ -139,4 +139,59 @@ term.dt[, GENDER.CD := factor(GENDER.CD)]
 # Now let's change the BIRTH.DATE column to an actual date
 term.dt[, BIRTH.DATE := as.Date(BIRTH.DATE, origin = "1899-12-30")]
 
-# 
+# Now let's change the CAMPUS.CD to the long format. AMC = Anschutz Medical Campus
+# and DC = Downtown Campus. I'm going to make DC Downtown 
+loc <- grep("DC", term.dt[, CAMPUS.CD])
+set(term.dt, i = loc, j = "CAMPUS.CD", "Downtown")
+
+loc <- grep("AMC", term.dt[, CAMPUS.CD])
+set(term.dt, i = loc, j = "CAMPUS.CD", "Anschutz Medical Campus")
+
+# Now let's change the ACAD.CAREER
+loc <- grep("DENT", term.dt[, ACAD.CAREER])
+set(term.dt, i = loc, j = "ACAD.CAREER", "Dentistry")
+
+loc <- grep("MED", term.dt[, ACAD.CAREER])
+set(term.dt, i = loc, j = "ACAD.CAREER", "Medicine")
+
+loc <- grep("PHAR", term.dt[, ACAD.CAREER])
+set(term.dt, i = loc, j = "ACAD.CAREER", "Pharmacy")
+
+loc <- grep("GRAD", term.dt[, ACAD.CAREER])
+set(term.dt, i = loc, j = "ACAD.CAREER", "Graduate")
+
+loc <- grep("UGRD", term.dt[, ACAD.CAREER])
+set(term.dt, i = loc, j = "ACAD.CAREER", "Undergraduate")
+
+loc <- grep("DPT", term.dt[, ACAD.CAREER])
+set(term.dt, i = loc, j = "ACAD.CAREER", "Physical Therapy")
+
+# Now let's change the ADMT_DT_MX. Some of the entries are encoded as date/time
+# formats, and some are numerical representations as dates. I'm going to single 
+# out the date/time observations from the numeric date formats and reassign them 
+# from there. 
+loc <- grep(":", test[, ADMT_DT_MAX])
+as.numeric(term.dt[-loc, .(ADMT_DT_MAX)], na.rm = TRUE)
+
+nums <- as.numeric(test[-loc, ADMT_DT_MAX])
+
+test[-loc][, .(ADMT_DT_MAX) := nums] 
+
+set(test, i = r[-loc], j = "ADMT_DT_MAX", value = nums)
+
+admt.fun <- function(x) {
+  t <- grep(":", x, value = TRUE)
+  if (class(t) == "character") {
+    as.numeric(x[t])
+} else {
+    x[t]
+  }
+}
+
+
+unlist(sapply(test$ADMT_DT_MAX, admt.fun))
+
+t <- grep(":", "fdkla", value = TRUE)
+class(t)
+class(t) == "character"
+
