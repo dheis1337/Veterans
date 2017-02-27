@@ -4,7 +4,7 @@ library(ggplot2)
 library(RODBC)
 library(RMySQL)
 
-setwd("c:/David")
+setwd("c:/Work")
 
 # setwd("C:/mystuff/datascience/projects/veterans")
 
@@ -103,6 +103,8 @@ class(term.dt$ETHNIC.GRP.CD)
 
 term.dt[, "term" := as.factor(term)]
 
+term.dt[, "ADMIT_TYPE_LD" := as.factor(ADMIT_TYPE_LD)]
+
 # Now comes the more tedious cleaning, which I won't do in any particular order
 # First, the PR.ADMIT.TERM column. It is currently encoded to represent the various
 # years, and the enrollment terms possible. Each code has form 21XY, where the 
@@ -166,32 +168,53 @@ set(term.dt, i = loc, j = "ACAD.CAREER", "Undergraduate")
 loc <- grep("DPT", term.dt[, ACAD.CAREER])
 set(term.dt, i = loc, j = "ACAD.CAREER", "Physical Therapy")
 
-# Now let's change the ADMT_DT_MX. Some of the entries are encoded as date/time
-# formats, and some are numerical representations as dates. I'm going to single 
-# out the date/time observations from the numeric date formats and reassign them 
-# from there. 
-loc <- grep(":", test[, ADMT_DT_MAX])
-as.numeric(term.dt[-loc, .(ADMT_DT_MAX)], na.rm = TRUE)
 
-nums <- as.numeric(test[-loc, ADMT_DT_MAX])
+# Now let's change the CU.MILITARY.BRANCH column to its decoded form.
+loc <- grep("AIR", term.dt[, CU.MILITARY.BRANCH])
+set(term.dt, i = loc, j = "CU.MILITARY.BRANCH", value = "Air Force")
 
-test[-loc][, .(ADMT_DT_MAX) := nums] 
+loc <- grep("ARM", term.dt[, CU.MILITARY.BRANCH])
+set(term.dt, i = loc, j = "CU.MILITARY.BRANCH", value = "Army")
 
-set(test, i = r[-loc], j = "ADMT_DT_MAX", value = nums)
+loc <- grep("MRN", term.dt[, CU.MILITARY.BRANCH])
+set(term.dt, i = loc, j = "CU.MILITARY.BRANCH", value = "Marines")
 
-admt.fun <- function(x) {
-  t <- grep(":", x, value = TRUE)
-  if (class(t) == "character") {
-    as.numeric(x[t])
-} else {
-    x[t]
-  }
-}
+loc <- grep("NAV", term.dt[, CU.MILITARY.BRANCH])
+set(term.dt, i = loc, j = "CU.MILITARY.BRANCH", value = "Navy")
+
+loc <- grep("CST", term.dt[, CU.MILITARY.BRANCH])
+set(term.dt, i = loc, j = "CU.MILITARY.BRANCH", value = "Coast Guard")
 
 
-unlist(sapply(test$ADMT_DT_MAX, admt.fun))
+term.dt[, CU.MILITARY.BRANCH := factor(CU.MILITARY.BRANCH)]
+                                       
+# Now let's get rid of unnecessary columns
+term.dt[, ADMIT_TYPE := NULL]
+term.dt[, ADMT_DT_MAX := NULL]
+term.dt[, ENRLD.TERM.CD := NULL]
+term.dt[, CU.MILITARY.STS.CD := NULL]
+term.dt[, CU.MILITARY.STS.LD := NULL]
+term.dt[, `Count.Distinct(PERSON.ID)1` := NULL]
+term.dt[, ENRLD.TERM.SD := NULL]
+term.dt[, TERM.SD := NULL]
+term.dt[, ACAD.PROG.PRIMARY := NULL]
+term.dt[, CU.ACD.YR.EDBL.AMT := NULL]
 
-t <- grep(":", "fdkla", value = TRUE)
-class(t)
-class(t) == "character"
+# Finally, let's change the column headers to a decoded version
+heads <- c("Institution", "Student ID", "First Name", "Last Name", "Ethnicity",
+           "Marital Status", "Gender", "Birth Date", "Term Admitted", "Admission Type", 
+           "Academic Level", "Campus", "Academic Career", "Academic Career CD", "Primary Academic Program", 
+           "Primary Plan", "Primary Major", "Enrollment Status", "Progress Units Taken", 
+           "Current Term GPA", "Cumulative Progress Units", "Cumulative GPA", "Degree",
+           "Academic Plan", "Military Branch", "Began Service", "Ended Service", "
+           Certification Status", "Aid Year", "Benefit Chapter", "Certification Type", 
+           "Residency Status", "Tuition Residency", "Tuition Classification", "Admission Residency",
+           "Email", "Home Phone", "Cell Phone", "Home Address", "Unit/Apt Number", 
+           "Home City", "Home State", "Home Zipcode", "Mailing Address", "Mailing Unit/Apt Number",
+           "Mailing Address Extended", "Mailing City", "Mailing State", "Mailing Zipcode", "Current Term")
 
+names(term.dt) <- heads
+
+# That concludes the cleaning! Let's save this and we can work with this clean 
+# data for our analysis/summary! 
+write.csv(term.dt, file = "VetsData.csv")
