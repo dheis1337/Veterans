@@ -76,3 +76,12 @@ ben.chap <- p + geom_bar(mapping = aes(x = reorder(`Benefit Chapter`, `Benefit C
 
 ggsave("benefitchapter.png", plot = ben.chap)
 # 
+
+
+# Gender Fall 2014
+ggplot(vets[`Current Term` == "Fall 2014"], aes(x = Gender)) +
+  geom_bar(fill = "#F5DEB3", col = "black") +
+  labs(title = "Gender of Students - Fall 2014", y = "Count")
+
+ggsave("Gender2014.png")
+
