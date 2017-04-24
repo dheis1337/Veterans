@@ -23,6 +23,20 @@ vets[, `Military Branch` := factor(`Military Branch`)]
 vets[, `Current Term` := factor(`Current Term`)]
 vets[, `Term Admitted` := factor(`Term Admitted`)]
 
+# I need to make the Current Term variable a date object, that way I can sort by 
+# the most recent date for each student. Each term will be given a date that is near
+# the last day of finals. This technically changes each year, but a date close to 
+# the actual end date will suffice. Once I find this, I will determine if
+# they have over 120 Cumulative Progress Units taken. Of those students that do, 
+# I will then look to see if the last term they were enrolled was before the 
+# Spring 2017 term. I will do this by taking the difference of Current Term 
+# and the last day of the Spring 2017 term. 
+vets[, `Current Term`]
+vets[, `Current Term` := gsub(" Fall", "-12-10", `Current Term`)]
+vets[, `Current Term` := gsub(" Spr", "-05-13", `Current Term`)]
+vets[, `Current Term` := gsub(" Sum", "-08-10", `Current Term`)]
+vets[, `Current Term` := as.Date(`Current Term`)]
+
 
 # I need to develop a way to determine if a student has graduated. Additionally, 
 # I need to determine which semester said student graduated in. It would also be 
@@ -32,7 +46,6 @@ vets[, `Term Admitted` := factor(`Term Admitted`)]
 # First, I want to separate the undergrads, from graduate and other professional students
 # This will make defining graduation rates a little easier. 
 undergrads <- vets[`Academic Career` == "Undergraduate"]
-table(undergrads$`Academic Level`)
 
 
 # Since there is no graduation variable, I'm going to have to come up with a method
@@ -57,7 +70,7 @@ for (i in 1:length(students)) {
 setkey(undergrads, 'Student ID')
 
 # Now, I need to sort the Cumm Prog Units Taken in a decreasing order
-undergrads <- undergrads[order(undergrads$`Cumulative Progress Units`, decreasing = TRUE)]
+undergrads <- undergrads[order(undergrads$`Current Term`, decreasing = TRUE)]
 
 # Now I can use the unique() function and sort by the Student ID. What this will 
 # do is grab the first row for each unique Student ID. The reason I sorted the
@@ -71,10 +84,19 @@ undergrads <- unique(undergrads, by = "Student ID")
 # Cumm Progress Units Taken
 summary(undergrads$`Cumulative Progress Units`)
 
+# I also want to break down the data by Enrollment Status. Students can be either
+# Enrolled or Not Enrolled. I want students who are Enrolled
+enrolled <- undergrads[`Enrollment Status` == "Enrolled"]
+
 # Now I want separate the data.table by people who have taken over 120 credits, 
 # and those who have takne under. 
-over.120.inc <- undergrads[`Cumulative Progress Units` >= 120]
-under.120.exc <- undergrads[`Cumulative Progress Units` < 120]
+over.120.inc <- enrolled[`Cumulative Progress Units` >= 120]
+under.120.exc <- enrolled[`Cumulative Progress Units` < 120]
 
+grad <- table(over.120.inc[`Current Term` < "2017-05-13"]$`Current Term`)
+
+
+
+table(vets[`Enrollment Status` == "Enrolled"][`Current Term` < "2017-05-13"][, `Current Term`]) 
 
 

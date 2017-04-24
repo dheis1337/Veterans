@@ -4,7 +4,7 @@ library(ggplot2)
 library(RODBC)
 library(RMySQL)
 
-setwd("c:/Work")
+setwd("c:/Work/Veterans")
 
 # setwd("C:/mystuff/datascience/projects/veterans")
 
@@ -20,8 +20,14 @@ sheet.function <- function(x, sheet.names) {
 # of all sheets in the MasterList workbook
 all.data <- lapply(sheet.names, sheet.function, x = "MasterList01_30_17.xlsx")
 
+files <- list.files()
+files <- files[5:21]
+
+all.data <- lapply(files, read.xlsx)
+all.data <- lapply(all.data, as.data.table)
+
 # Name each list element with the appropriate sheet name from the workbook
-names(all.data) <- sheet.names
+names(all.data) <- files
 
 # Get all the column names from the first sheet. The column names are abbreviated, 
 # so I want to change them to their extended forms for better understandability
@@ -51,7 +57,7 @@ term.data <- all.data[-c(4, 8, 12)]
 agg.data <- all.data[c(4, 8, 12)]
 
 # Now that these are split, I can rbind each of the list elements into one data table
-term.dt <- do.call("rbind", term.data)
+term.dt <- do.call("rbind", all.data)
 
 # Before I start convert data types, I'm going to get rid of some of the columns
 # I don't need. 
@@ -61,49 +67,49 @@ term.dt[, c("CU.VA.CLM.NUM", "CU.SMR.BNFT.AMT", "CU.ACD.YR.BNFT.AMT", "CU.SMR.ED
 # Now I have all of my term data in one data table, I can begin to start converting
 # the data types where needed. I'm going to convert all necessary variables to factors
 # first. 
-term.dt[, "INSTITUTION.CD" := as.factor(INSTITUTION.CD)]
+term.dt[, "INSTITUTION.CD" := factor(INSTITUTION.CD)]
 class(term.dt$INSTITUTION.CD) # to ensure conversion worked 
 
-term.dt[, "ETHNIC.GRP.CD" := as.factor(ETHNIC.GRP.CD)]
+term.dt[, "ETHNIC.GRP.CD" := factor(ETHNIC.GRP.CD)]
 class(term.dt$ETHNIC.GRP.CD)
 
-term.dt[, "MAR.STAT.LD" := as.factor(MAR.STAT.LD)]
+term.dt[, "MAR.STAT.LD" := factor(MAR.STAT.LD)]
 class(term.dt$ETHNIC.GRP.CD)
 
-term.dt[, "GENDER.CD" := as.factor(GENDER.CD)]
+term.dt[, "GENDER.CD" := factor(GENDER.CD)]
 class(term.dt$ETHNIC.GRP.CD)
 
-term.dt[, "ACAD.LVL.LD" := as.factor(ACAD.LVL.LD)]
+term.dt[, "ACAD.LVL.LD" := factor(ACAD.LVL.LD)]
 class(term.dt$ETHNIC.GRP.CD)
 
-term.dt[, "CAMPUS.CD" := as.factor(CAMPUS.CD)]
+term.dt[, "CAMPUS.CD" := factor(CAMPUS.CD)]
 class(term.dt$ETHNIC.GRP.CD)
 
-term.dt[, "ACAD.CAREER" := as.factor(ACAD.CAREER)]
+term.dt[, "ACAD.CAREER" := factor(ACAD.CAREER)]
 class(term.dt$ETHNIC.GRP.CD)
 
-term.dt[, "MAJOR1.LD" := as.factor(MAJOR1.LD)]
+term.dt[, "MAJOR1.LD" := factor(MAJOR1.LD)]
 class(term.dt$ETHNIC.GRP.CD)
 
-term.dt[, "DEG.LD" := as.factor(DEG.LD)]
+term.dt[, "DEG.LD" := factor(DEG.LD)]
 class(term.dt$ETHNIC.GRP.CD)
 
 
-term.dt[, "ACAD.PLAN.LD" := as.factor(ACAD.PLAN.LD)]
+term.dt[, "ACAD.PLAN.LD" := factor(ACAD.PLAN.LD)]
 class(term.dt$ETHNIC.GRP.CD)
 
-term.dt[, "CU.MILITARY.STS.CD" := as.factor(CU.MILITARY.STS.CD)]
+term.dt[, "CU.MILITARY.STS.CD" := factor(CU.MILITARY.STS.CD)]
 class(term.dt$ETHNIC.GRP.CD)
 
-term.dt[, "CU.MILITARY.STS.LD" := as.factor(ETHNIC.GRP.CD)]
+term.dt[, "CU.MILITARY.STS.LD" := factor(ETHNIC.GRP.CD)]
 class(term.dt$ETHNIC.GRP.CD)
 
-term.dt[, "CU.MILITARY.BRANCH" := as.factor(CU.MILITARY.BRANCH)]
+term.dt[, "CU.MILITARY.BRANCH" := factor(CU.MILITARY.BRANCH)]
 class(term.dt$ETHNIC.GRP.CD)
 
-term.dt[, "term" := as.factor(term)]
+term.dt[, "ENRLD.TERM.SD" := factor(ENRLD.TERM.SD)]
 
-term.dt[, "ADMIT_TYPE_LD" := as.factor(ADMIT_TYPE_LD)]
+term.dt[, "ADMIT_TYPE_LD" := factor(ADMIT_TYPE_LD)]
 
 # Now comes the more tedious cleaning, which I won't do in any particular order
 # First, the PR.ADMIT.TERM column. It is currently encoded to represent the various
@@ -121,6 +127,8 @@ for (i in 1:length(decode)) {
   loc <- grep(codes[i], term.dt[, PR.ADMIT.TERM])
   set(term.dt, i = loc, j = "PR.ADMIT.TERM", value = decode[i])
 }
+
+
 
 # Now let's change the GENDER.CD to their exapnded form. 
 # Males
@@ -195,14 +203,13 @@ term.dt[, ENRLD.TERM.CD := NULL]
 term.dt[, CU.MILITARY.STS.CD := NULL]
 term.dt[, CU.MILITARY.STS.LD := NULL]
 term.dt[, `Count.Distinct(PERSON.ID)1` := NULL]
-term.dt[, ENRLD.TERM.SD := NULL]
 term.dt[, TERM.SD := NULL]
 term.dt[, ACAD.PROG.PRIMARY := NULL]
 term.dt[, CU.ACD.YR.EDBL.AMT := NULL]
 
 # Finally, let's change the column headers to a decoded version
 heads <- c("Institution", "Student ID", "First Name", "Last Name", "Ethnicity",
-           "Marital Status", "Gender", "Birth Date", "Term Admitted", "Admission Type", 
+           "Marital Status", "Gender", "Birth Date", "Term Admitted", "Admission Type", "Current Term",
            "Academic Level", "Campus", "Academic Career", "Academic Career CD", "Primary Academic Program", 
            "Primary Plan", "Primary Major", "Enrollment Status", "Progress Units Taken", 
            "Current Term GPA", "Cumulative Progress Units", "Cumulative GPA", "Degree",
@@ -211,9 +218,11 @@ heads <- c("Institution", "Student ID", "First Name", "Last Name", "Ethnicity",
            "Residency Status", "Tuition Residency", "Tuition Classification", "Admission Residency",
            "Email", "Home Phone", "Cell Phone", "Home Address", "Unit/Apt Number", 
            "Home City", "Home State", "Home Zipcode", "Mailing Address", "Mailing Unit/Apt Number",
-           "Mailing Address Extended", "Mailing City", "Mailing State", "Mailing Zipcode", "Current Term")
+           "Mailing Address Extended", "Mailing City", "Mailing State", "Mailing Zipcode")
 
 names(term.dt) <- heads
+
+unique(term.dt, by = c("Student ID", "Current Term"))
 
 # That concludes the cleaning! Let's save this and we can work with this clean 
 # data for our analysis/summary! 
