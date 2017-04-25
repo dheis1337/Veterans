@@ -6,7 +6,7 @@ setwd("C:/work")
 
 
 vets <- fread("VetsData.csv")
-
+vets <- vets[, -1]
 
 # Change variables to appropriate type
 vets[, "Institution" := factor(Institution)]
@@ -36,6 +36,12 @@ vets[, `Current Term` := gsub(" Fall", "-12-10", `Current Term`)]
 vets[, `Current Term` := gsub(" Spr", "-05-13", `Current Term`)]
 vets[, `Current Term` := gsub(" Sum", "-08-10", `Current Term`)]
 vets[, `Current Term` := as.Date(`Current Term`)]
+
+# Before I build any other data.tables that are subsets of the vets data.table, I
+# need to remove duplicate entries. 
+setkey(vets, "Student ID")
+vets <- unique(vets, by = c("Student ID", "Current Term"))
+
 
 
 # I need to develop a way to determine if a student has graduated. Additionally, 
@@ -86,17 +92,42 @@ summary(undergrads$`Cumulative Progress Units`)
 
 # I also want to break down the data by Enrollment Status. Students can be either
 # Enrolled or Not Enrolled. I want students who are Enrolled
-enrolled <- undergrads[`Enrollment Status` == "Enrolled"]
+enrolled <- undergrads[`Enrollment Status` == "Enrolled"][`Primary Academic Program` != "CU Succeed"]
 
 # Now I want separate the data.table by people who have taken over 120 credits, 
 # and those who have takne under. 
 over.120.inc <- enrolled[`Cumulative Progress Units` >= 120]
-under.120.exc <- enrolled[`Cumulative Progress Units` < 120]
-
+over.120.inc <- over.120.inc[order(`Current Term`, decreasing = TRUE)]
+over.120.inc <- unique(over.120.inc, by = "Student ID")
 grad <- table(over.120.inc[`Current Term` < "2017-05-13"]$`Current Term`)
 
+table(enrolled[`Current Term` < "2017-05-13"]$`Current Term`)
+
+grad.table <- data.table(Graduates = grad, Enrolled = table(enrolled[`Current Term` < "2017-05-13"]$`Current Term`))
+
+grad.table[, Enrolled.V1 := NULL]
+
+names(grad.table) <- c("Term", "Graduated", "Enrolled")
+grad.table[, Percentage := Graduated / Enrolled]
+grad.table[, Term := gsub("-12-10", " Fall", Term)]
+grad.table[, Term := gsub("-05-13", " Spring", Term)]
+grad.table[, Term := gsub("-08-10", " Summer", Term)]
 
 
-table(vets[`Enrollment Status` == "Enrolled"][`Current Term` < "2017-05-13"][, `Current Term`]) 
+grad.table[-c(3, 6, 9, 12, 15)]
 
+
+ggplot(grad.table, aes(x = Term, y = Percentage)) +
+  geom_col(fill = "#F5DEB3", col = "black") +
+  labs(title = "Graduation Rates by Term")
+
+ggplot(grad.table[-c(3, 6, 9, 12, 15)], aes(x = Term, y = Percentage)) +
+  geom_col(fill = "#F5DEB3", col = "black") +
+  labs(title = "Graduation Rates by Term without Summer Terms")
+
+
+ggplot(gar)
+
+ggsave("GradRateswithoutSummer.png")
+T
 
